@@ -1,0 +1,42 @@
+<main class="app-shell">
+  <header class="topbar">
+    <button class="brand" type="button" (click)="goHome()" aria-label="Return to Quizly home"><span class="brand-mark" aria-hidden="true">Q</span><span>Quizly</span></button>
+    <span class="topbar-label">Exam preparation, simplified</span>
+  </header>
+
+  @if (screen() === 'home') {
+    <section class="hero" aria-labelledby="welcome-heading">
+      <p class="eyebrow">YOUR STUDY COMPANION</p>
+      <h1 id="welcome-heading">Study smarter.<br /><em>Feel ready.</em></h1>
+      <p class="hero-copy">Turn past exam questions into focused study sessions that help knowledge stick.</p>
+      <div class="import-panel"><div><p class="card-kicker">YOUR QUESTION BANK</p><h2>Load questions from JSON</h2><p>Files stay on this device and replace the sample questions for this session.</p></div><input #questionFile class="visually-hidden" type="file" accept="application/json,.json" (change)="loadQuestionFile($event)" /><button class="button button-ghost" type="button" (click)="questionFile.click()">Choose JSON file</button></div>
+      @if (importMessage()) { <p class="import-status success" role="status">{{ importMessage() }}</p> }
+      @if (importError()) { <p class="import-status error" role="alert">{{ importError() }}</p> }
+      <div class="question-picker"><label for="question-count">Questions per session</label><input id="question-count" type="number" min="1" [max]="questionBankSize()" [value]="questionCount()" (input)="updateQuestionCount($event)" /><span>of {{ questionBankSize() }} in your question bank</span></div>
+      <div class="mode-grid">
+        <article class="mode-card practice-card"><div class="card-icon" aria-hidden="true">✦</div><p class="card-kicker">LEARN AS YOU GO</p><h2>Practice mode</h2><p>Get instant feedback and clear explanations after every answer.</p><button class="button button-primary" type="button" (click)="startQuiz('practice')">Start practicing <span aria-hidden="true">→</span></button></article>
+        <article class="mode-card exam-card"><div class="card-icon" aria-hidden="true">◷</div><p class="card-kicker">TEST YOURSELF</p><h2>Exam mode</h2><p>Answer distraction-free, then review every result at the end.</p><button class="button button-secondary" type="button" (click)="startQuiz('exam')">Take an exam <span aria-hidden="true">→</span></button></article>
+      </div>
+      <p class="question-count"><strong>{{ questionBankSize() }}</strong> questions ready for your next session</p>
+    </section>
+  } @else if (screen() === 'quiz') {
+    <section class="quiz-page" aria-labelledby="question-heading">
+      <div class="quiz-meta"><button class="text-button" type="button" (click)="goHome()">← Exit session</button><span class="mode-pill" [class.exam-pill]="mode() === 'exam'">{{ mode() }} mode</span></div>
+      <div class="progress-row" aria-label="Quiz progress"><span>Question {{ currentIndex() + 1 }} of {{ questions.length }}</span><span>{{ answeredCount() }} answered</span></div><div class="progress-track"><div class="progress-value" [style.width.%]="progress()"></div></div>
+      <article class="question-card"><p class="question-number">QUESTION {{ currentIndex() + 1 }}</p><h1 id="question-heading">{{ currentQuestion().question }}</h1><p class="selection-hint">{{ currentQuestion().type === 'single-select' ? 'Select one correct option' : 'Select ALL correct options' }}</p>
+        <div class="options" [attr.role]="currentQuestion().type === 'single-select' ? 'radiogroup' : 'group'" [attr.aria-label]="currentQuestion().question">
+          @for (option of currentQuestion().options; track option.text; let optionIndex = $index) {
+            <button class="option" type="button" [attr.role]="currentQuestion().type === 'single-select' ? 'radio' : 'checkbox'" [attr.aria-checked]="selectedOptionIndexes().includes(optionIndex)" [class.correct]="optionState(option, optionIndex) === 'correct'" [class.incorrect]="optionState(option, optionIndex) === 'incorrect'" [class.selected]="optionState(option, optionIndex) === 'selected'" (click)="selectOption(optionIndex)"><span class="option-letter">{{ optionIndex + 1 }}</span><span class="option-content"><span>{{ option.text }}</span>@if (mode() === 'practice' && selectedOptionIndexes().includes(optionIndex)) { <span class="option-explanation">{{ option.explanation }}</span> }</span>@if (optionState(option, optionIndex) === 'correct') { <span class="status" aria-label="Correct">✓</span> } @if (optionState(option, optionIndex) === 'incorrect') { <span class="status" aria-label="Incorrect">×</span> }</button>
+          }
+        </div>
+      </article>
+      <nav class="quiz-navigation" aria-label="Question navigation"><button class="button button-ghost" type="button" [disabled]="currentIndex() === 0" (click)="previousQuestion()">← Previous</button>@if (mode() === 'practice' && currentIndex() === questions.length - 1) { <div class="practice-complete-actions"><button class="button button-secondary" type="button" (click)="startQuiz('practice')">Practice again</button><button class="button button-primary" type="button" (click)="goHome()">Back to title</button></div> } @else if (mode() === 'exam' && currentIndex() === questions.length - 1) { <button class="button button-primary" type="button" (click)="finishExam()">Finish exam</button> } @else { <button class="button button-primary" type="button" [disabled]="mode() === 'practice' && selectedOptionIndexes().length === 0" (click)="nextQuestion()">Next question →</button> }</nav>
+    </section>
+  } @else {
+    <section class="results-page" aria-labelledby="results-heading"><p class="eyebrow">EXAM COMPLETE</p><h1 id="results-heading">Your result</h1><div class="score-card" [class.passing-score]="passed()" [class.not-passing-score]="!passed()"><strong>{{ scorePercent() }}%</strong><span>{{ score() }} of {{ questions.length }} correct</span></div>
+      @if (passed()) { <div class="result-status passed-status" role="status"><div class="fireworks" aria-hidden="true"><span></span><span></span><span></span></div><h2>Passed!</h2><p>You reached the 70% passing score. Great work.</p></div> } @else { <div class="result-status not-passed-status" role="status"><span class="wizard-illustration" role="img" aria-label="Thoughtful wizard illustration">🧙</span><div><p class="wizard-quote">“YOU DID NOT PASS!!”</p><p>Review the missed questions and try again.</p></div></div> }
+      @if (incorrectAnswers().length === 0) { <div class="all-correct"><span aria-hidden="true">✦</span><h2>Perfect score!</h2><p>You answered every question correctly.</p></div> } @else { <div class="review-heading"><h2>Review missed questions</h2><p>Use these explanations to guide your next study session.</p></div><div class="review-list">@for (item of incorrectAnswers(); track item.question.question) { <article class="review-card"><p class="question-number">MISSED QUESTION</p><h3>{{ item.question.question }}</h3><p class="your-answer"><strong>Your answer:</strong> {{ selectedAnswerText(item.question, item.selectedIndexes) }}</p><p class="correct-answer"><strong>Correct answer:</strong> {{ correctAnswerText(item.question) }}</p><p class="review-explanation">{{ correctExplanationText(item.question) }}</p></article> }</div> }
+      <button class="button button-primary" type="button" (click)="startQuiz('exam')">Try again <span aria-hidden="true">→</span></button><button class="text-button results-home" type="button" (click)="goHome()">Back to home</button>
+    </section>
+  }
+</main>
