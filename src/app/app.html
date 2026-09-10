@@ -1,7 +1,7 @@
-<main class="app-shell">
+<main class="app-shell" [class.night-mode]="isNightMode()">
   <header class="topbar">
     <button class="brand" type="button" (click)="goHome()" aria-label="Return to Quizly home"><span class="brand-mark" aria-hidden="true">Q</span><span>Quizly</span></button>
-    <span class="topbar-label">Exam preparation, simplified</span>
+    <div class="topbar-actions"><span class="topbar-label">Exam preparation, simplified</span><button class="theme-toggle" type="button" (click)="toggleNightMode()" [attr.aria-pressed]="isNightMode()" [attr.aria-label]="isNightMode() ? 'Switch to light mode' : 'Switch to night mode'">{{ isNightMode() ? '☀️' : '🌙' }}</button></div>
   </header>
 
   @if (screen() === 'home') {

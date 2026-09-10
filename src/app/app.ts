@@ -11,8 +11,10 @@ type Screen = 'home' | 'quiz' | 'results';
 })
 export class App {
   private readonly quizData = inject(QuizDataService);
+  private readonly themeStorageKey = 'quizly-night-mode';
 
   protected readonly questions: QuizQuestion[] = [];
+  protected readonly isNightMode = signal(this.readInitialThemePreference());
   protected readonly mode = signal<QuizMode>('practice');
   protected readonly screen = signal<Screen>('home');
   protected readonly currentIndex = signal(0);
@@ -35,6 +37,22 @@ export class App {
     .filter(({ question, selectedIndexes }) => !this.isAnswerCorrect(question, selectedIndexes)));
   protected readonly scorePercent = computed(() => Math.round((this.score() / this.questions.length) * 100));
   protected readonly passed = computed(() => this.scorePercent() >= 70);
+
+  constructor() {
+    this.applyTheme(this.isNightMode());
+  }
+
+  protected toggleNightMode(): void {
+    const nextTheme = !this.isNightMode();
+    this.isNightMode.set(nextTheme);
+    this.applyTheme(nextTheme);
+
+    try {
+      localStorage.setItem(this.themeStorageKey, String(nextTheme));
+    } catch {
+      // Ignore localStorage failures and keep in-memory theme state.
+    }
+  }
 
   protected startQuiz(mode: QuizMode): void {
     const sessionQuestions = this.drawNewSessionQuestions();
@@ -146,5 +164,21 @@ export class App {
   private isAnswerCorrect(question: QuizQuestion, selectedIndexes: number[]): boolean {
     const correctIndexes = question.options.flatMap((option, index) => option.isCorrect ? [index] : []);
     return selectedIndexes.length === correctIndexes.length && selectedIndexes.every((index) => correctIndexes.includes(index));
+  }
+
+  private readInitialThemePreference(): boolean {
+    try {
+      const savedTheme = localStorage.getItem(this.themeStorageKey);
+      if (savedTheme !== null) return savedTheme === 'true';
+    } catch {
+      // Fall back to system preference when localStorage is unavailable.
+    }
+
+    return !!globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  }
+
+  private applyTheme(isNightMode: boolean): void {
+    if (typeof document === 'undefined') return;
+    document.body.classList.toggle('night-mode', isNightMode);
   }
 }
