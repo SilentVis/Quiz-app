@@ -49,7 +49,7 @@ Install dependencies with `npm install`, then start the application with `npm st
 
 Run `npm run build` to create a production build, or `npm test` to execute unit tests.
 
-Production builds enforce an Angular `anyComponentStyle` budget (warning at `10kB`, error at `11kB`) so stylesheet growth is still flagged while allowing the current `src/app/app.scss` feature set to compile.
+Production builds enforce an Angular `anyComponentStyle` budget per component stylesheet (warning at `10kB`, error at `11kB`); the current AppComponent stylesheet (`src/app/app.scss`) is the component near that threshold.
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.7.
 
 ## Development server
