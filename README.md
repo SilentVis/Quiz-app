@@ -48,8 +48,8 @@ Install dependencies with `npm install`, then start the application with `npm st
 ## Validate
 
 Run `npm run build` to create a production build, or `npm test` to execute unit tests.
-# QuizApp
 
+Production builds enforce an Angular `anyComponentStyle` budget (warning at `10kB`, error at `11kB`) so stylesheet growth is still flagged while allowing the current `src/app/app.scss` feature set to compile.
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.7.
 
 ## Development server
